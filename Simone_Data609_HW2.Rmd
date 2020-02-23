@@ -1,0 +1,472 @@
+---
+title: 'Data 609 Assignment #2'
+author: "Joseph Simone"
+date: "2/19/2020"
+output:
+  pdf_document: default
+---
+
+
+
+<STYLE>
+table {
+    border: 1px solid black;
+}
+th {
+    background-color: rgb(12, 99, 204);
+    color: white;
+    font-weight: bold;
+    padding: 20px 30px;
+}
+tr:nth-child(even) {
+    background-color: rgb(220,220,220);
+}
+tr:nth-child(odd) {
+    background-color: rgb(184, 174, 174);
+}
+</STYLE>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r , message=FALSE, warning=FALSE}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(knitr)
+library(gridExtra)
+library(latex2exp)
+library(reshape2)
+library(kableExtra)
+```
+
+## Section 2.1
+### Page 121: #2
+
+For each of the following data sets, formulate the mathematical model that minimizes the largest deviation between the data and the line y D axCb. If a computer is available, solve for the estimates of a and b.
+
+
+#### Part A. 
+
+
+```{r}
+x<- c(1.0, 2.3, 3.7, 4.2, 6.1, 7.0)
+y<- c(3.6, 3.0, 3.2, 5.1, 5.3, 6.8)
+mydf <- data.frame(x, y)
+
+```
+
+```{r}
+mydf %>%
+  kable() %>%
+  kable_styling(full_width = F)
+```
+
+##### solve the estimates for a and b using Least Square Method
+
+```{r}
+lm1 <- lm(y ~ x)
+lm1
+```
+
+$Slope:$ 0.5642
+
+$Intercept:$ 2.2148
+
+##### Plot
+
+```{r}
+mydf2<- data.frame(x,y)
+mydf2$fx<- (0.5642*mydf2$x) + 2.2148
+```
+
+```{r}
+p<- ggplot(data = mydf2, aes(x = x, y = fx)) +
+    geom_line()
+```
+
+```{r}
+p <- p + labs(title=" y=ax+b", x="x", y="y")
+p
+```
+
+
+### Page 135: #7 
+
+#### Part A. 
+
+In the following data, W represents the weight of a fish (bass) and l represents its length. Fit the model W D kl3 to the data using the least-squares criterion.
+
+
+```{r}
+l <- c(14.5,12.5,17.25,14.5,12.625,17.75,14.125,12.625)
+w <- c(27,17,41,26,17,49,23,16)
+mydf2 <- data.frame(l, w)
+```
+
+```{r}
+mydf2 %>%
+  kable() %>%
+  kable_styling(full_width = F)
+```
+
+```{r}
+k <- sum(l^3 * w)/sum(l^6)
+model1<- k*l^3
+resi1 <- w - model1
+```
+
+```{r}
+sse1 <- sum(resi1^2)
+sse1
+```
+
+#### Part B.
+
+In the following data, g represents the girth of a fish. Fit the model W D klg2 to the data using the least-squares criterion.
+
+```{r}
+g <- c(9.75,8.375,11.0,9.75,8.5,12.5,9.0,8.5)
+```
+
+```{r}
+mydf3 <- data.frame(mydf2, g)
+```
+
+```{r}
+mydf3 %>%
+  kable() %>%
+  kable_styling(full_width = F)
+
+```
+
+
+
+$w = { kl^3}$
+$k = \frac{\Sigma l_i^3 w_i}{\Sigma l_i^{6}}$
+
+```{r}
+k2 <- sum(l*g^2*w)/sum(l^2*g^4)
+model2 <- k2*l*g^2
+resi2 <- w - model2
+```
+
+
+```{r}
+sse2 <- sum(resi2^2)
+sse2
+```
+
+
+#### Part C.
+
+Which of the two models fits the data better? Justify fully. Which model do you
+prefer? Why?
+
+##### Solution:
+The model that fits the data better, would have to be the first Model. This is due to the fact that the Sum of Squares Error is lower for Model 1. 
+
+
+### Page 135: #7
+
+construct a scatterplot of the given data. Is there a trend in the data? Are any of the data points outliers? Construct a divided difference table. Is smoothing with a low-order polynomial appropriate? If so, choose an appropriate polynomial and fit using the least-squares criterion of best fit. Analyze the goodness of fit by examining appropriate indicators and graphing the model, the data points, and the deviations.
+
+The following data represent the length of a bass fish and its weight.
+
+```{r}
+bass <- data.frame(length = c(12.5, 12.625, 14.125, 14.5, 17.25, 17.75),
+                   weight = c(17, 16.5, 23, 26.5, 41, 49))
+```
+
+```{r}
+bass %>%
+  kable() %>%
+  kable_styling(full_width = F)
+
+```
+
+
+```{r}
+bassdelta1 <- (tail(bass$weight, -1) - head(bass$weight, -1))/
+  (tail(bass$length, -1) - head(bass$length, -1))
+
+bassdelta2 <- (tail(bassdelta1, -1) - head(bassdelta1, -1))/
+  (tail(bass$length, -2) - head(bass$length, -2))
+
+bassdelta3 <- (tail(bassdelta2, -1) - head(bassdelta2, -1))/
+  (tail(bass$length, -3) - head(bass$length, -3))
+
+bassdelta4 <- (tail(bassdelta3, -1) - head(bassdelta3, -1))/
+  (tail(bass$length, -4) - head(bass$length, -4))
+
+bassdelta5 <- (tail(bassdelta4, -1) - head(bassdelta4, -1))/
+  (tail(bass$length, -5) - head(bass$length, -5))
+```
+
+
+```{r}
+bass$delta1 <- c(bassdelta1, 0)
+bass$delta2 <- c(bassdelta2, rep(0,2))
+bass$delta3 <- c(bassdelta3, rep(0,3))
+bass$delta4 <- c(bassdelta4, rep(0,4))
+bass$delta5 <- c(bassdelta5, rep(0,5))
+```
+
+
+```{r}
+bass %>%
+  kable() %>%
+  kable_styling(full_width = F)
+```
+
+```{r}
+ggplot(bass, aes(x=length, y=weight)) + geom_point()
+```
+
+As seen from the plot the number of observations are less, so it is difficult to detect outliers in this scatter plot
+
+```{r}
+ggplot(bass, aes(x=length, y=delta1)) + geom_line()
+```
+
+```{r}
+ggplot(bass, aes(x=length, y=delta2)) + geom_line()
+```
+
+```{r}
+ggplot(bass, aes(x=length, y=delta3)) + geom_line()
+```
+
+```{r}
+ggplot(bass, aes(x=length, y=delta4)) + geom_line()
+```
+
+
+```{r}
+ggplot(bass, aes(x=length, y=delta5)) + geom_line()
+```
+
+
+##### Linear Model 
+
+```{r}
+bassmodel <- lm(weight ~ length, data=bass)
+```
+
+```{r}
+coefficients <- bassmodel$coefficients
+```
+
+```{r}
+bass$bassest <- coefficients[1] + coefficients[2]*bass$length
+```
+
+
+```{r}
+ggplot(bass) + geom_point(aes(x=length, y=weight)) + geom_line(aes(x=length, y=bassest))
+```
+
+```{r}
+e <- ggplot(mydf, aes(x = n, y = error)) + geom_point()
+```
+
+##### Quadratic Model 
+
+```{r}
+bassmodelquad <- lm(weight ~ poly(length, 2, raw=TRUE), data=bass)
+
+coefficients <- bassmodelquad$coefficients
+
+bass$bassestquad <- coefficients[1] + coefficients[2]*bass$length + coefficients[3]*bass$length^2
+
+ggplot(bass) + geom_point(aes(x=length, y=weight)) + geom_line(aes(x=length, y=bassestquad))
+
+```
+
+
+```{r}
+bassmodelquart <- lm(weight ~ poly(length, 4, raw=TRUE), data=bass)
+
+coefficients <- bassmodelquart$coefficients
+
+bass$bassestquart <- coefficients[1] + coefficients[2]*bass$length + coefficients[3]*bass$length^2 + coefficients[4]*bass$length^3 + coefficients[5]*bass$length^4
+
+ggplot(bass) + geom_point(aes(x=length, y=weight)) + geom_line(aes(x=length, y=bassestquart))
+```
+
+##### Residuals of the Quadratic Model 
+
+```{r}
+residuals <- data.frame(linear = bassmodel$residuals, quadratic = bassmodelquad$residuals, 
+                        quartic = bassmodelquart$residuals, datapoint = seq(1,6))
+
+
+ggplot(melt(residuals, id="datapoint"), aes(x=datapoint, y=value, color=variable)) + geom_line()
+```
+
+The model that fits the data the bets would be the Quadratic model. This appears to be a case of overfit.
+
+## Section 2.1
+### Page 194: #1
+
+```{r}
+ms <- function(x, len) {
+
+  sq <- x^2
+  len_sq <- len * 2
+  
+  sq <- as.character(stringr::str_pad(as.character(sq), len_sq, pad = "0"))
+   
+  start <- len_sq/2 - len/2 + 1 
+  end <- len_sq/2 + len/2  
+
+  return (as.numeric(substring(sq, start, end)))
+}
+```
+
+Use the middle-square method to generate:
+
+#### Part A.
+
+10 random numbers using $x_0$ = 1009.
+
+```{r}
+solution  <- 1009
+
+for (i in 1:10) {
+   solution[i + 1] <- ms(solution[i], 4)
+}
+
+print(solution)
+```
+
+
+#### Part B.
+
+20 random numbers using $x_0$ = 653217.
+
+```{r}
+solution  <- 653217
+
+for (i in 1:20) {
+   solution[i + 1] <- ms(solution[i], 6)
+}
+
+print(solution)
+```
+
+
+#### Part C.
+
+15 random numbers using $x_0$ = 3043.
+
+```{r}
+solution  <- 3043
+
+for (i in 1:15) {
+   solution[i + 1] <- ms(solution[i], 4)
+}
+
+print(solution)
+```
+
+
+#### Part D.
+
+Comment about the results of each sequence. Was there cycling? Did each sequence degenerate rapidly?
+
+##### Solution:
+In sequence 'a', degenerated to 0 was fairly quick within 10 iterations. 
+
+In sequence 'b', did not degenerate or cycle after 20 iterations. 
+
+In Sequence 'c', it cycles after hitting 6100 on the 4th iteration. Then repeats the cycle at 6100, 2100, 4100, 8100.
+
+### Page 211: #3
+
+In many situations, the time T between deliveries and the order quantity Q is not fixed. Instead, an order is placed for a specific amount of gasoline. Depending on how many orders are placed in a given time interval, the time to fill an order varies. You have no reason to believe that the performance of the delivery operation will change. Therefore, you have examined records for the past 100 deliveries and found the following lag times, or extra days, required to fill your order:
+
+
+|Lag Time | # of Occurrences | 
+|:--------|------------------:
+| 2       |10                |
+| 3       |25                |
+| 4       |30                |
+| 5       |20                |
+| 7       |13                |
+| 7       |2                 |
+|         |-                 |
+|Total    |100               |
+
+
+
+
+Construct a Monte Carlo simulation for the lag time submodel. If you have a handheld calculator or computer available, test your submodel by running 1000 trials and comparing the number of occurrences of the various lag times with the historical data.
+
+```{r}
+simulation <- function(iterations) {
+  
+  n <- iterations
+  counter <- rep(0, 6)
+
+  for (i in 1:n) { 
+    
+    random <- runif(1)
+    
+    counter[1] <- counter[1] + (random >= 0    & random <= 0.1)
+    counter[2] <- counter[2] + (random >  0.1  & random <= 0.35)
+    counter[3] <- counter[3] + (random >  0.35 & random <= 0.65)
+    counter[4] <- counter[4] + (random >  0.65 & random <= 0.85)
+    counter[5] <- counter[5] + (random >  0.85 & random <= 0.98)
+    counter[6] <- counter[6] + (random >  0.98 & random <= 1.0)
+  }
+  return (counter)
+}
+```
+
+
+
+```{r}
+mydf6 <- data.frame(lag =  as.factor(2:7), occurrences = c(10, 25, 30, 20, 13, 2))
+```
+
+
+```{r}
+mydf6$probability  <- with(mydf6, occurrences / sum(occurrences))
+mydf6$c_prob <- cumsum(mydf6$probability)
+```
+
+#### Simulation
+
+```{r}
+n <- 10000
+counter <- simulation(10000)
+```
+
+
+```{r}
+mydf6$simulated_number[1] <- counter[1] 
+mydf6$simulated_number[2] <- counter[2]
+mydf6$simulated_number[3] <- counter[3]
+mydf6$simulated_number[4] <- counter[4]
+mydf6$simulated_number[5] <- counter[5]
+mydf6$simulated_number[6] <- counter[6]
+```
+
+
+```{r}
+mydf6$simulated_prob[1] <- counter[1]/n
+mydf6$simulated_prob[2] <- counter[2]/n
+mydf6$simulated_prob[3] <- counter[3]/n
+mydf6$simulated_prob[4] <- counter[4]/n
+mydf6$simulated_prob[5] <- counter[5]/n
+mydf6$simulated_prob[6] <- counter[6]/n
+```
+
+```{r}
+mydf6 %>%
+  kable() %>%
+  kable_styling(full_width = F)
+```
